@@ -1,14 +1,19 @@
 import threading
 import socket
 import os
+import time
 
 host = '127.0.0.1' #Running on localhost (no server)
 
 port = 33333
 
+nickname = "Server"
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((host, port))
 server.listen() #Start listening for incoming ports
+
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #AF_INET = IP, SOCK_STREAM = TCP
+client.connect(('127.0.0.1', 33333)) #localhost
 
 BUFFER_SIZE = 1024 #Buffer size of 1024 bytes
 
@@ -24,13 +29,15 @@ def handle(client):
         try:
             message = client.recv(1024) #Try to receive a message from client (up to 1024 bytes)
             temp = message.decode('ascii')
-            if "LIST images" in temp:
+            index = clients.index(client)
+            nickname = nicknames[index]
+            if "LIST images" in temp and nickname != "Server":
                 arr = os.listdir('./images')
                 for i in arr:
+                    time.sleep(0.05)
                     client.send(i.encode('ascii'))
 
-
-            elif "DOWNLOAD" in temp:
+            elif "DOWNLOAD" in temp and nickname != "Server":
                 split_arr = temp.split(' ') #Split up the message with space delimiter
 
                 file_name = './images/' + split_arr[3] #Concatenate file name into string
@@ -75,9 +82,9 @@ def receive():
     while True:
         client, address = server.accept(); #Accept incoming client at any given time
         print(f"Connected with {str(address)}") #When a new client has connected to the server
-
         client.send('NICK'.encode('ascii')) #Prompt client for the nickname
         nickname = client.recv(1024).decode('ascii') #Server receive the nickname from the client
+
         nicknames.append(nickname) #Add it to the list of nicknames
         clients.append(client) #Add it to the list of clients
 
@@ -86,35 +93,42 @@ def receive():
         #To broadcast to the rest of the clients that a new client has joined the server
         client.send('Connected to the server! Start chatting. '.encode('ascii')) #Let the client know that they are connected
 
-        thread = threading.Thread(target=handle, args=(client,))
+        thread = threading.Thread(target=handle, args=(client, ))
         thread.start()
 
 def write():
     while True:
         message = f'{nickname} > {input("")}' #Constantly waiting for new messages
-        server.send(message.encode('ascii'))
+        client.send(message.encode('ascii'))
 
-# def receive_message():
-#     while True:
-#         try:
-#             message = server.recv(BUFFER_SIZE).decode('ascii')
-#             if message == 'NICK':
-#                 admin.send(nickname.encode('ascii'))
-#             print(message)
-#
-#         except:
-#             print("An error has occurred!")
-#             server.close()
-#             break
+def receive_message():
+    while True:
+        try:
+            message = client.recv(BUFFER_SIZE).decode('ascii')
+            if message == 'NICK':
+                client.send(nickname.encode('ascii'))
+            else:
+                print(message)
+        except:
+            print("An error has occurred!")
+            client.close()
+            break
 
 print("Server is listening...")
-# receive_thread = threading.Thread(target=receive_message)
-# receive_thread.start()
-#
-# write_thread = threading.Thread(target=write)
-# write_thread.start()
+
+
+receive_thread = threading.Thread(target=receive_message)
+receive_thread.start()
+
+write_thread = threading.Thread(target=write)
+write_thread.start()
 
 receive()
+
+
+
+
+
 
 
 
