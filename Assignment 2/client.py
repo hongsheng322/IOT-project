@@ -4,8 +4,12 @@ import threading
 
 nickname = input("Please enter your nickname: ")
 
+server = input("Please enter IP address and port: ")
+
+server_arr = server.split(" ")
+
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #AF_INET = IP, SOCK_STREAM = TCP
-client.connect(('127.0.0.1', 33333)) #localhost
+client.connect((server_arr[0], int(server_arr[1]))) #localhost
 
 BUFFER_SIZE = 1024
 
