@@ -3,7 +3,7 @@ import paho.mqtt.client as mqtt_client
 import time
 
 broker = 'test.mosquitto.org'
-port = 1883
+mqttport = 1883
 topic = "python/mqtt"
 
 def connect_mqtt() -> mqtt_client:
@@ -15,7 +15,7 @@ def connect_mqtt() -> mqtt_client:
 
     client = mqtt_client.Client("Living_rm_PI")
     client.on_connect = on_connect
-    client.connect(broker, port)
+    client.connect(broker, mqttport)
     return client
 
 def subscribe(client: mqtt_client):

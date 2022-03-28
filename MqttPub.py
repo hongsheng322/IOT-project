@@ -4,7 +4,7 @@ from paho.mqtt import client as mqtt_client
 
 
 broker = 'test.mosquitto.org'
-port = 1883
+mqttport = 1883
 topic = "python/mqtt"
 # generate client ID with pub prefix randomly
 client_id = f'python-mqtt-{random.randint(0, 1000)}'
@@ -18,7 +18,7 @@ def connect_mqtt():
 
     client = mqtt_client.Client(client_id)
     client.on_connect = on_connect
-    client.connect(broker, port)
+    client.connect(broker, mqttport)
     return client
 
 
