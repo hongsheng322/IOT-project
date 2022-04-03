@@ -9,6 +9,9 @@ topic = "python/mqtt"
 # generate client ID with pub prefix randomly
 client_id = f'python-mqtt-{random.randint(0, 1000)}'
 
+light2 = 0
+motion2 = 0
+
 def connect_mqtt():
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
@@ -35,6 +38,7 @@ def publish(client):
         else:
             print(f"Failed to send message to topic {topic}")
         msg_count += 1
+
 
 
 def run():

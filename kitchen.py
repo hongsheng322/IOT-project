@@ -24,7 +24,17 @@ print("Ready")
 
 broker = 'test.mosquitto.org'
 mqttport = 1883
-topic = "python/mqtt"
+
+#topics to publish to living room
+topic = "kitchen/fire"
+topic2 = "kitchen/light"
+topic3 = "kitchen/motion"
+
+#Values to send to living room
+light = 0
+fire = 0
+motion = 0
+
 # generate client ID with pub prefix randomly
 client_id = f'python-mqtt-{random.randint(0, 1000)}'
 
@@ -42,84 +52,108 @@ def connect_mqtt():
 
 
 def publish(client):
-    msg_count = 0
     while True:
-        time.sleep(1)
-        msg = f"messages: {msg_count}"
-        warningmsg = "on buzzer"
-        result = client.publish(topic, msg)
-        # result: [0, 1]
-        status = result[0]
-        if status == 0:
-            try:
-                GPIO.add_event_detect(firePin, GPIO.BOTH, bouncetime=300)
-
-                while 1:
-                    #if motion is detected, no light, lights on
-                    if GPIO.input(pirPin) == 1:
-                        print("Motion Detected!")
-
-                        #if light is detected
-                        if GPIO.input(lightPin) == 1:
-                            print("Room Lightning Detected!")
-                            print("LED Off")
-                            GPIO.output(led1, GPIO.LOW)
-                        else:
-                            print("No Room Lightning Detected!")
-                            print("LED On")
-                            GPIO.output(led1, GPIO.HIGH)
-
-                    #if no motion, check light, if lights on, off light
+        time.sleep(5) # 5 seconds interval
+    
+        try:
+            GPIO.add_event_detect(firePin, GPIO.BOTH, bouncetime=300) #flame sensor detection
+            while (1):
+                #publish motion data to living room
+                if GPIO.input(pirPin) == 1: # There is motion detected
+                    print("Motion detected!")
+                    motion = 1
+                    result1 = client.publish(topic3, motion)
+                    if result1[0] == 0: #If successful
+                        print(f"Send `{motion}` to topic `{topic3}`")
                     else:
-                        print("No Motion Detected!")
-            
-                        #if fire is detected
-                        if GPIO.event_detected(firePin):
-                            time.sleep(5)
-                            print("Flame Detected!")
-                            print("Buzzer LED On")
-                            GPIO.output(buzzerled, GPIO.HIGH)
-                            result1 = client.publish(topic, warningmsg)
-                            if result1[0] == 0:
-                                print(f"Send `{warningmsg}` to topic `{topic}`")
+                        print("Motion message did not publish")
 
-                            #if light is detected
-                            if GPIO.input(lightPin) == 1:
-                                time.sleep(5)
-                                print("Room Lightning Detected!")
-                                print("Buzzer LED On")
-                                GPIO.output(buzzerled, GPIO.HIGH)
-                                result1 = client.publish(topic, warningmsg)
-                                if result1[0] == 0:
-                                    print(f"Send `{warningmsg}` to topic `{topic}`")
-
-                        #no fire is detected
+                    #if light is not detected in the kitchen
+                    if GPIO.input(lightPin) == 0:
+                        light = 1 #Set light value to 1 (On the light because motion is detected)
+                        print("Motion detected, turning lights on")
+                        GPIO.output(led1, GPIO.HIGH) #Switch on LED (kitchen light)
+                        result1 = client.publish(topic2, light)
+                        if result1[0] == 0:
+                            print(f"Send `{light}` to topic `{topic2}`")
+                        
                         else:
-                            print("No Flame Detected!")
+                            print("Light message did not publish")
 
-                            #if light is detected
-                            if GPIO.input(lightPin) == 1:
-                                time.sleep(10)
-                                print("Room Lightning Detected!")
-                                print("Buzzer LED On")
-                                GPIO.output(buzzerled, GPIO.HIGH)
-                                result1 = client.publish(topic, warningmsg)
-                                if result1[0] == 0:
-                                    print(f"Send `{warningmsg}` to topic `{topic}`")
-                            else:
-                                print("No Room Lightning Detected!")
-                                GPIO.output(buzzerled, GPIO.LOW)
-                                GPIO.output(led1, GPIO.LOW)
-            
-                    time.sleep(2)
+                    else:
+                        print("Room light is already on")
+                        print("LED is already on")
+                        light = 0
+                        result1 = client.publish(topic2, light)
+                        if result1[0] == 0:
+                            print(f"Send `{light}` to topic `{topic2}`")
+                        
+                        else:
+                            print("Light message did not publish")
 
-            except KeyboardInterrupt:
-                print("Quit")
-                GPIO.cleanup()
-            
-        else:
-            print(f"Failed to send message to topic {topic}")
-        msg_count += 1
+
+                else: #if no motion
+                    print("No Motion Detected!")
+                    motion = 0 #0
+                    result1 = client.publish(topic3, motion)
+                    if result1[0] == 0: #If successful
+                        print(f"Send `{motion}` to topic `{topic3}`")
+                    else:
+                        print("Motion message did not publish")
+
+                    if GPIO.input(lightPin) == 1: #Light is on
+                        light = 0
+                        print("Motion not detected, turning lights off")
+                        print("LED OFF")
+                        GPIO.output(led1, GPIO.LOW) #Switch off LED (kitchen light)
+                        result1 = client.publish(topic2, light)
+                        if result1[0] == 0:
+                            print(f"Send `{light}` to topic `{topic2}`")
+                        
+                        else:
+                            print("Light message did not publish")
+                    else: #light is off
+                        light = 0
+                        result1 = client.publish(topic2, light)
+                        if result1[0] == 0:
+                            print(f"Send `{light}` to topic `{topic2}`")
+                        
+                        else:
+                            print("Light message did not publish")
+                        
+
+                    #if fire is detected but no motion
+                    if GPIO.event_detected(firePin): #return true / false
+                        time.sleep(5)
+                        print("Flame Detected!")
+                        fire = 1
+                        print("Buzzer on")
+                        GPIO.output(buzzerled, GPIO.HIGH)
+                        
+                        result1 = client.publish(topic, fire)
+                        if result1[0] == 0:
+                            print(f"Send `{fire}` to topic `{topic}`")
+                        else:
+                            print("Fire message did not publish")
+
+                    else:
+                        print("Fire is off and no motion detected, no safety hazard")
+                        fire = 0 #Fire is off
+                        GPIO.output(buzzerled, GPIO.LOW) #Stop the buzzer 
+
+                        result1 = client.publish(topic, fire)
+                        
+                        if result1[0] == 0:
+                            print(f"Send `{fire}` to topic `{topic}`")
+                        else:
+                            print("Fire message did not publish")
+                                    
+                time.sleep(5)
+                
+
+        except KeyboardInterrupt:
+            print("Quit")
+            GPIO.cleanup()
 
 
 def run():

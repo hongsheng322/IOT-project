@@ -12,7 +12,7 @@ motion1 = 0
 motion2 = 0
 
 # SOCKET====================================================
-host, port = "127.0.0.1", 42069
+host, port = "192.168.1.148", 42069
 BUFFER_SIZE = 1024 #Buffer size of 1024 bytes
 
 # Create a datagram socket

@@ -29,7 +29,7 @@ try:
     while 1:
         #if motion is detected, no light, lights on
         if GPIO.input(pirPin) == 1:
-                print GPIO.input(pirPin)
+                print (GPIO.input(pirPin))
                 print("Motion Detected!")
 
                 #if light is detected
