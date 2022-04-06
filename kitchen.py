@@ -19,7 +19,7 @@ GPIO.setup(firePin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(buzzerled, GPIO.OUT)
 
 print("Sensor Alarm (CTRL+C to exit)")
-time.sleep(.2)
+time.sleep(0.1)
 print("Ready")
 
 broker = 'test.mosquitto.org'
@@ -53,7 +53,7 @@ def connect_mqtt():
 
 def publish(client):
     while True:
-        time.sleep(5) # 5 seconds interval
+        time.sleep(0.1) # 0.1 seconds interval
     
         try:
             GPIO.add_event_detect(firePin, GPIO.BOTH, bouncetime=300) #flame sensor detection
@@ -124,7 +124,7 @@ def publish(client):
 
                     #if fire is detected but no motion
                     if GPIO.event_detected(firePin): #return true / false
-                        time.sleep(5)
+                        time.sleep(0.1)
                         print("Flame Detected!")
                         fire = 1
                         print("Buzzer on")
@@ -148,7 +148,7 @@ def publish(client):
                         else:
                             print("Fire message did not publish")
                                     
-                time.sleep(5)
+                time.sleep(0.1)
                 
 
         except KeyboardInterrupt:

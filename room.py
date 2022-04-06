@@ -30,7 +30,7 @@ GPIO.setup(led1, GPIO.OUT)
 GPIO.setup(pirPin, GPIO.IN)
 
 # SOCKET====================================================
-host, port = "192.168.1.129", 42069
+host, port = "192.168.78.198", 42069
 BUFFER_SIZE = 1024 #Buffer size of 1024 bytes
 
 # Create a datagram socket
@@ -65,6 +65,15 @@ def socketServer():
         #message to send to client
         message = "fire," + str(firestatus)
         bytesToSend = str.encode(message)
+        sock.sendto(bytesToSend, address)
+
+        if firestatus == 1 and motion2 == 0:
+            message = "warning,1"
+            bytesToSend = str.encode(message)
+
+        else:
+            message = "warning,0"
+            bytesToSend = str.encode(message)
 
         # Sending a reply to client
         sock.sendto(bytesToSend, address)
@@ -87,8 +96,8 @@ def socketServer():
 
         #message to send to client
         message = "motion1," + str(motion1)
-        bytesToSend  = str.encode(message)
-        # print(message)
+        bytesToSend = str.encode(message)
+        sock.sendto(bytesToSend, address)
 
         #message to send to client
         message = "motion2," + str(motion2)
@@ -143,6 +152,9 @@ def subscribe(mqttclient: mqtt_client):
                     p.ChangeFrequency(toneVal)
                     time.sleep(0.1)
 
+            else:
+                firestatus = 0
+
         if msg.topic == "kitchen/motion":
             motion2 = int(msg.payload.decode())
             if motion2 == 1:
@@ -159,13 +171,13 @@ def subscribe(mqttclient: mqtt_client):
             light2 = int(msg.payload.decode())
             if light2 == 1:
                 print("Light detected in the kitchen.")
+                #KitchenTimeoutThread()
             else:
-                print("No light detected in the kitchen.")
+                print("No light detected in the kitchen. closing")
                 light2 = 0
                 
 
         try:
-            
             if GPIO.input(pirPin) == 1: #If motion is detected
                 motion1 = 1
                 print("Motion Detected!")
@@ -194,38 +206,23 @@ def mqttrun():
     subscribe(mqttclient)
     mqttclient.loop_forever()
 #==========================================================
+def scheduled_kitchen():
+    global light2
+    print("\nturn off light %s!\n")
+    light2 = 0
 
-#for testing only
-def boolflip(value):
-    #global firestatus
-    value = 1 - value
-    firestatus = value
-    return value
-
-def boolflip2(value):
-    #global light1
-    # value = 1 - value
-    light1 = value
-    return value
-
-def boolflip3(value):
-    #global motion1
-    # value = 1 - value
-    motion1 = value
-    return value
-
-def YEET():
+def run_scheduled_kitchen():
+    countdown = timeout  # reset the count
     while True:
-        boolflip(firestatus)
-        print(firestatus)
-        time.sleep(0.5)
-        #print("YEET!")
-
-def YOINK():
-    while True:
-        print(firestatus)
-        time.sleep(0.5)
-        #print("YOINK!")
+        global light2
+        time.sleep(1 - timer() % 1)  # lock with the timer, to avoid drift
+        countdown -= 1
+        if should_reset_count():
+            countdown = timeout  # reset the count
+        if countdown <= 0:  # timeout happened
+            countdown = timeout  # reset the count
+            "some code is executed"
+            light2 = 0
 
 class mqttThread(Thread):
     def __init__(self):
@@ -244,7 +241,15 @@ class socketThread(Thread):
         #YOINK()
         socketServer()
 
-lock = threading.Lock()
+class KitchenTimeoutThread(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.daemon = True
+        self.start()
+    def run(self):
+        #YOINK()
+        run_scheduled_kitchen()
+
 mqttThread()
 socketThread()
 while True:
