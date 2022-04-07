@@ -32,10 +32,10 @@ def handle(client):
     while True:
         try:
             message = client.recv(1024) #Try to receive a message from client (up to 1024 bytes)
-            temp = message.decode('ascii')
+            temp = message.decode('ascii') #Decode message
             index = clients.index(client)
             nickname = nicknames[index]
-            if "LIST images" in temp and nickname != "Server":
+            if "LIST images" in temp and nickname != "Server": 
                 arr = os.listdir('./images')
                 for i in arr:
                     time.sleep(0.05)
@@ -63,7 +63,7 @@ def handle(client):
                 file = open(file_name, 'rb')
                 image_data = file.read(BUFFER_SIZE)
 
-                while image_data:
+                while image_data: #Send image_data in chunks
                     client.send(image_data)
                     image_data = file.read(BUFFER_SIZE)
 

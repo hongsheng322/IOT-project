@@ -6,7 +6,7 @@ nickname = input("Please enter your nickname: ")
 
 server = input("Please enter IP address and port: ")
 
-server_arr = server.split(" ")
+server_arr = server.split(" ") #Split the IP address and port into two different strings
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #AF_INET = IP, SOCK_STREAM = TCP
 client.connect((server_arr[0], int(server_arr[1]))) #localhost
@@ -16,26 +16,25 @@ BUFFER_SIZE = 1024
 def receive():
     while True:
         try:
-            message = client.recv(BUFFER_SIZE).decode('ascii')
+            message = client.recv(BUFFER_SIZE).decode('ascii') #Client to receive message
 
-            if message == 'NICK':
-                client.send(nickname.encode('ascii'))
+            if message == 'NICK': #If message decoded is NICK
+                client.send(nickname.encode('ascii')) #Send the 'nickname' string entered by the client
 
             if message == 'SENDINGCHUNKS':
                 number_chunks = int(client.recv(1024).decode('ascii')) #Convert the number of chunks to integer from String
                 file = open('downloaded/downloaded_image.png', 'wb')
 
                 # This is because TCP/IP transfers in streams
-
-                while number_chunks > 0:
+                while number_chunks > 0: #Decrement the number of chunks
                     image_chunk = client.recv(BUFFER_SIZE)
 
                     file.write(image_chunk)
-                    number_chunks -= 1
+                    number_chunks -= 1 
 
                 print("Image Downloaded Successfully")
 
-                file.close()
+                file.close() #Close the file
 
             else:
                 print(message)
@@ -50,11 +49,6 @@ def write():
     while True:
         message = f'{nickname} > {input("")}' #Constantly waiting for new messages
         client.send(message.encode('ascii'))
-
-
-
-
-
 
 receive_thread = threading.Thread(target=receive)
 receive_thread.start()
