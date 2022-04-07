@@ -5,15 +5,14 @@ import time
 
 host = '127.0.0.1' #Running on localhost (no server)
 
-port = 33333
-
-server = input("Please enter IP address and port: ")
+server = input("Please enter the listening port: ")
+#127.0.0.1 33333
 
 server_arr = server.split(" ")
 
 nickname = "Server"
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind((host, port))
+server.bind((host, int(server_arr[1])))
 server.listen() #Start listening for incoming ports
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #AF_INET = IP, SOCK_STREAM = TCP
