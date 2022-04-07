@@ -15,7 +15,7 @@ RASPI SETUP
 11) Run kitchen.py in second raspberry pi: python kitchen.py
 
 
-Resources
-======================
-https://www.youtube.com/watch?v=TVxQROFPjy0
-get host IP: hostname -I
+CLIENT APPLICATION SETUP
+=========================
+Link to repository: https://github.com/hongsheng322/IOT-Unity-Client
+1) Install APK: IOT Unity.apk
